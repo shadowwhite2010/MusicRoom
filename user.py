@@ -5,13 +5,14 @@ import threading
 @Pyro4.expose
 @Pyro4.behavior(instance_mode="single")
 class User():
-	def __init__(self, uri, username):
+	def __init__(self, uri, username, dely):
 		"""The instantiation of this class requires:
 			- uri : str - uri to connect to chat.
 			- username : str - how it shall be displayed for the participants in the chat."""
 
 		self.chat = Pyro4.Proxy(uri)
 		self._username = username
+		self.delay=dely    # delay of client w.r.t server
 
 		#Creating window
 		self.top = tkinter.Tk()
@@ -114,4 +115,5 @@ class User():
 	def my_uri(self):
 		return self._my_uri
 	
+		
 	

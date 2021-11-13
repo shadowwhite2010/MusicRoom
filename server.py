@@ -4,6 +4,7 @@ import time
 import Pyro4
 import threading
 import socket as sk
+import datetime
 
 class Lobby():
 	def __init__(self, hostname='localhost', port=25501):
@@ -61,6 +62,12 @@ class Server():
 
 		while True:
 			con, cliente = self._server.accept()
+
+			# Respond the client with server clock time
+			con.send(str(datetime.datetime.now()).encode())
+			print(type(con))
+			print(cliente)
+			
 			mensagem = con.recv(2048).decode('utf-8')
 
 			if mensagem == 'GET uri':
@@ -73,9 +80,9 @@ class Server():
 
 if __name__=="__main__": 
 	server = Server()
-	server.create_chat('Music Room 1')
-	server.create_chat('Music Room 2')
-	server.create_chat('Music Room 3')
+	server.create_chat('Sala de bate papo 1')
+	server.create_chat('Sala de bate papo 2')
+	server.create_chat('Sala de bate papo 3')
 	server.run()
 
 	#keeping server alive

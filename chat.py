@@ -13,7 +13,7 @@ class Chat():
 
 	def play_music(self, music_name):
 		# for playing note.mp3 file
-		playsound(f'audios/{music_name}')
+		playsound(f'audio_files/{music_name}')
 		print('playing sound using  playsound')
 
 	def connect(self, uri):
