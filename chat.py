@@ -1,3 +1,4 @@
+import server
 import Pyro4
 from playsound import playsound
 
@@ -9,7 +10,9 @@ class Chat():
 		self.messages = []
 		self.users = {}
 		self.usernames = []
+		self.user_msg=''
 		# self.play_music('music2.wav')
+
 
 	def play_music(self, music_name):
 		# for playing note.mp3 file
@@ -68,17 +71,27 @@ class Chat():
 		If it's a system message and must be sent to everybody, no uri is provided."""
 
 		if len(self.usernames)!=0 and message==f'{self.usernames[0]}: play':
-			self.play_music('music2.wav')
+			# self.play_music('music2.wav')
+			self.user_msg='play'
 
 		self.messages.append(message)
 		for user_uri, user in self.users.items():
 			if user_uri == uri: continue
 			user.incoming_message(message)
 
+	def get_play_state(self):
+		return self.user_msg
+
+	def set_play_state(self):
+		self.user_msg=''
+
 	def __str__(self):
 		return f"chat named {self.name}"
+
 
 	@property
 	def name(self):
 		return self._name
+
+
 	

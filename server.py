@@ -5,7 +5,10 @@ import Pyro4
 import threading
 import socket as sk
 import datetime
+import threading, wave, pyaudio,pickle,struct
 
+
+check=0
 class Lobby():
 	def __init__(self, hostname='localhost', port=25501):
 		"""hostname : str (default='localhost') - address which the daemon should run.
@@ -42,6 +45,7 @@ class Server():
 		- hostname : str (default='localhost') - address which the server should run.
 		- port : int (default=25500) - port which the server should run.
 		- lobby_port : int (default=25501) - port which the daemon should run."""
+		self.rooms_and_client={}
 
 		print("Setting up daemon")
 		self.lobby = Lobby(hostname=hostname, port=lobby_port)
@@ -65,24 +69,102 @@ class Server():
 
 			# Respond the client with server clock time
 			con.send(str(datetime.datetime.now()).encode())
-			print(type(con))
-			print(cliente)
 			
 			mensagem = con.recv(2048).decode('utf-8')
 
 			if mensagem == 'GET uri':
 				con.send(json.dumps(self.lobby.chats).encode())
 
-			con.close()
+			#recieving the selected music room name and username
+			client_string=con.recv(2048).decode('utf-8')
+			client_room, client_name=tuple(map(str, client_string.split(', ')))
+			
+			# finding uri of users room
+			temp_uri=''
+			for item in self.lobby.chats:
+				if item[0]==client_room:
+					temp_uri=item[1]
+					break
+			
+			# getting object of that room
+			music_room=Pyro4.Proxy(temp_uri)
+
+			#Appending client to particular room
+			if client_room not in self.rooms_and_client:
+				
+				self.rooms_and_client[client_room]=(music_room, [])
+			
+			self.rooms_and_client[client_room][1].append((client_name,con))
+
+			# create thread to watch music room by client
+			if len(self.rooms_and_client[client_room][1])==1:
+				self.th=threading.Thread(target = self.watch_rooms, args=(client_room, ))
+				self.th.start()
+
+
+			# con.close()
+
+	def watch_rooms(self, room):
+		while True:
+			if len(self.rooms_and_client)!=0:
+				# print(self.rooms_and_client[room][0].get_play_state())
+				if self.rooms_and_client[room][0].get_play_state()=='play':
+					for c in self.rooms_and_client[room][1]:
+						self.t=threading.Thread(target = self.send_music(c[1], 'audio_files/music2.wav'))
+						self.t.start()
+						self.rooms_and_client[room][0].set_play_state()
+
+
+	# def watch_rooms(self):
+	# 	while True:
+	# 		if len(self.rooms_and_client)!=0:
+	# 			for room in self.rooms_and_client:
+	# 				# print(self.rooms_and_client[room][0].get_play_state())
+	# 				if self.rooms_and_client[room][0].get_play_state()=='play':
+	# 					print('play me ghus gaya')
+	# 					for c in self.rooms_and_client[room][1]:
+	# 						self.t=threading.Thread(target = self.send_music(c[1], 'audio_files/music2.wav'))
+	# 						self.t.start()
+	# 						self.rooms_and_client[room][0].set_play_state()
+	# 						print("music sent to one client")
+						
+						
+
+	def send_music(self, client_socket, music_file):
+		CHUNK = 1024
+		wf = wave.open(music_file, 'rb')
+
+		data = None
+		while True:
+			if client_socket:
+				while True:
+				
+					data = wf.readframes(CHUNK)
+					
+					if data==b'':
+						break
+
+					a = pickle.dumps(data)
+					message = struct.pack("Q",len(a))+a
+					client_socket.sendall(message)
+			break
+
+		
+
 
 	def create_chat(self, chat_name):
 		self.lobby.register(chat_name)
 
 if __name__=="__main__": 
 	server = Server()
-	server.create_chat('Sala de bate papo 1')
-	server.create_chat('Sala de bate papo 2')
-	server.create_chat('Sala de bate papo 3')
+	server.create_chat('Music Room 1')
+	server.create_chat('Music Room 2')
+	server.create_chat('Music Room 3')
+
+	# # create thread to watch music room by client
+	# server.th=threading.Thread(target = server.watch_rooms)
+	# server.th.start()
+
 	server.run()
 
 	#keeping server alive

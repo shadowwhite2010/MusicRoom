@@ -4,8 +4,10 @@ import socket as sk
 import datetime
 from dateutil import parser
 from timeit import default_timer as timer
+import threading, wave, pyaudio, pickle,struct,os
 
 delay=0
+socket_to_pass=''
 def chritian(socket):
 	request_time = timer()
  
@@ -36,9 +38,10 @@ def chritian(socket):
 def get_uris(server, port):
 	'''Função que se conecta ao servidor \"dns\" de uri
 	e descobre quais são os chats existentes'''
-	global delay
+	global delay,socket_to_pass
 	socket = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
 	socket.connect((server, port))
+	socket_to_pass=socket
 
 	#Calculate delay
 	delay=chritian(socket)
@@ -49,8 +52,50 @@ def get_uris(server, port):
 
 	return json.loads(serialized)
 
+def listen_music():
+	global socket_to_pass
+	client_socket=socket_to_pass
+	print(client_socket)
+	
+	p = pyaudio.PyAudio()
+	CHUNK = 1024
+	stream = p.open(format=p.get_format_from_width(2),
+					channels=2,
+					rate=18410,
+					output=True,
+					frames_per_buffer=CHUNK)
+	
+	data = b""
+	payload_size = struct.calcsize("Q")
+	while True:
+		try:
+			while len(data) < payload_size:
+				packet = client_socket.recv(4*1024) # 4K
+				# print(packet)
+				if not packet: break
+				data+=packet
+			packed_msg_size = data[:payload_size]
+			data = data[payload_size:]
+			msg_size = struct.unpack("Q",packed_msg_size)[0]
+			while len(data) < msg_size:
+				data += client_socket.recv(4*1024)
+			frame_data = data[:msg_size]
+			data  = data[msg_size:]
+			frame = pickle.loads(frame_data)
+			print(frame)
+			stream.write(frame)
+
+		except:
+			continue
+
+
+	client_socket.close()
+	print('Audio closed')
+	os._exit(1)
+
 def main(server='localhost', port=25500):
 	#while para encontrar um nome de usuário válido
+	global socket_to_pass
 	while True:
 		username = input('Username: ')
 
@@ -72,9 +117,14 @@ def main(server='localhost', port=25500):
 
 		try:
 			uri = uris[int(selection)][1]
+			socket_to_pass.send((uris[int(selection)][0]+", "+username).encode())
 			break
 		except (IndexError, ValueError):
 			print(f"'{selection}' is not a valid chat, please, try again.")
+
+	# server listens infinitely
+	t=threading.Thread(target = listen_music)
+	t.start()
 
 	#A representação do usuário conectada ao bate-papo é instanciada
 	u = user.User(uri, username, delay)
