@@ -114,6 +114,3 @@ class User():
 	@property
 	def my_uri(self):
 		return self._my_uri
-	
-		
-	

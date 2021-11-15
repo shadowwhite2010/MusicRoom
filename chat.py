@@ -67,7 +67,6 @@ class Chat():
 	def _send_message(self, message, uri=None):
 		"""Method invisible for remote users due to starting with '_'.
 		register the message and sends to every user connected.
-
 		If it's a system message and must be sent to everybody, no uri is provided."""
 
 		if len(self.usernames)!=0 and message==f'{self.usernames[0]}: play':
@@ -92,6 +91,3 @@ class Chat():
 	@property
 	def name(self):
 		return self._name
-
-
-	

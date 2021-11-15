@@ -35,24 +35,12 @@ def chritian(socket):
 	return error
 
 
-def get_uris(balancer, bal_port):
+def get_uris(server, port):
 	'''Função que se conecta ao servidor \"dns\" de uri
 	e descobre quais são os chats existentes'''
 	global delay,socket_to_pass
-
-	# Create socket which will connect to load balancer
-	load_socket= sk.socket(sk.AF_INET, sk.SOCK_STREAM)
-	load_socket.connect((balancer, bal_port))
-
-	# Recieve the ip and port of server to connect
-	serv_info=load_socket.recv(2048).decode('utf-8')
-	print(serv_info)
-	serv_ip, serv_port=tuple(map(str, serv_info.split(', ')))
-	serv_port=int(serv_port)
-
-	# Create socket which will connect to the required server
 	socket = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
-	socket.connect((serv_ip, serv_port))
+	socket.connect((server, port))
 	socket_to_pass=socket
 
 	#Calculate delay
@@ -67,6 +55,7 @@ def get_uris(balancer, bal_port):
 def listen_music():
 	global socket_to_pass
 	client_socket=socket_to_pass
+	print(client_socket)
 	
 	p = pyaudio.PyAudio()
 	CHUNK = 1024
@@ -103,8 +92,8 @@ def listen_music():
 	print('Audio closed')
 	os._exit(1)
 
-def main(server='localhost', port=25498):
-	#while to find a valid username
+def main(server='localhost', port=25500):
+	#while para encontrar um nome de usuário válido
 	global socket_to_pass
 	while True:
 		username = input('Username: ')
@@ -112,18 +101,18 @@ def main(server='localhost', port=25498):
 		if ':' not in username:
 			break
 		else:
-			print("Pick a valid username")
+			print("Nome de usuario não pode ter ':'. tente novamente")
 
 
 	uris = get_uris(server, port)
 
-	#Enter the valid music rooms
+	#while para selecionar uma sala de bate-papo válidada
 	while True:
-		print('Available Music rooms:')
+		print('Chats disponíveis:')
 		for n, item in enumerate(uris):
 			print(f"{n}: {item[0]}")
 
-		selection = input("Pick a room: ")
+		selection = input("Pick a chat: ")
 
 		try:
 			uri = uris[int(selection)][1]
@@ -136,7 +125,7 @@ def main(server='localhost', port=25498):
 	t=threading.Thread(target = listen_music)
 	t.start()
 
-	#Create a user for client
+	#A representação do usuário conectada ao bate-papo é instanciada
 	u = user.User(uri, username, delay)
 
 
