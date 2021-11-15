@@ -8,7 +8,6 @@ import datetime
 import threading, wave, pyaudio,pickle,struct
 
 
-check=0
 class Lobby():
 	def __init__(self, hostname='localhost', port=25501):
 		"""hostname : str (default='localhost') - address which the daemon should run.

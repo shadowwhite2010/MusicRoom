@@ -82,7 +82,6 @@ def listen_music():
 			frame_data = data[:msg_size]
 			data  = data[msg_size:]
 			frame = pickle.loads(frame_data)
-			print(frame)
 			stream.write(frame)
 
 		except:
