@@ -154,18 +154,18 @@ class Server():
 	def create_chat(self, chat_name):
 		self.lobby.register(chat_name)
 
-if __name__=="__main__": 
-	server = Server()
-	server.create_chat('Music Room 1')
-	server.create_chat('Music Room 2')
-	server.create_chat('Music Room 3')
+# if __name__=="__main__": 
+# 	server = Server()
+# 	server.create_chat('Music Room 1')
+# 	server.create_chat('Music Room 2')
+# 	server.create_chat('Music Room 3')
 
-	# # create thread to watch music room by client
-	# server.th=threading.Thread(target = server.watch_rooms)
-	# server.th.start()
+# 	# # create thread to watch music room by client
+# 	# server.th=threading.Thread(target = server.watch_rooms)
+# 	# server.th.start()
 
-	server.run()
+# 	server.run()
 
-	#keeping server alive
-	while True:
-		time.sleep(30)
+	# #keeping server alive
+	# while True:
+	# 	time.sleep(30)
