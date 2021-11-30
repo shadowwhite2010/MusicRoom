@@ -13,6 +13,7 @@ class User():
 		self.chat = Pyro4.Proxy(uri)
 		self._username = username
 		self.delay=dely    # delay of client w.r.t server
+		self.alive=1
 
 		#Creating window
 		self.top = tkinter.Tk()
@@ -46,6 +47,8 @@ class User():
 
 		try:
 			tkinter.mainloop()
+			# print("hello")
+			# self.top.destroy()
 		except Exception as e:
 			print(e)
 			self.disconnect()
@@ -78,7 +81,7 @@ class User():
 
 	def disconnect(self):
 		"""This method closes the window and clears the username in the chat."""
-		self.top.quit()
+		self.top.destroy()
 		self.chat.disconnect(self.my_uri)
 		print('Disconnected')
 
@@ -97,6 +100,12 @@ class User():
 	def incoming_message(self, message):
 		#Recieving a message -> displaying at window.
 		self.messages.insert(tkinter.END, message)
+
+	def check_alive(self):
+		return self.alive
+
+	def kill(self):
+		self.alive=0
 
 	def __eq__(self, other):
 		return self.username == other.username

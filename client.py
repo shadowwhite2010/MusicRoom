@@ -5,9 +5,12 @@ import datetime
 from dateutil import parser
 from timeit import default_timer as timer
 import threading, wave, pyaudio, pickle,struct,os
+import Pyro4
 
 delay=0
 socket_to_pass=''
+user_alive=1
+user_uri=''
 def chritian(socket):
 	request_time = timer()
  
@@ -36,8 +39,8 @@ def chritian(socket):
 
 
 def get_uris(server, port):
-	'''Função que se conecta ao servidor \"dns\" de uri
-	e descobre quais são os chats existentes'''
+	'''Function that connects to the \"dns\" server of uri
+and find out what are the existing chats'''
 	global delay,socket_to_pass
 	socket = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
 	socket.connect((server, port))
@@ -55,13 +58,12 @@ def get_uris(server, port):
 def listen_music():
 	global socket_to_pass
 	client_socket=socket_to_pass
-	print(client_socket)
 	
 	p = pyaudio.PyAudio()
 	CHUNK = 1024
 	stream = p.open(format=p.get_format_from_width(2),
 					channels=2,
-					rate=18410,
+					rate=55410,
 					output=True,
 					frames_per_buffer=CHUNK)
 	
@@ -92,41 +94,56 @@ def listen_music():
 	print('Audio closed')
 	os._exit(1)
 
+def close_socket():
+	a=1
+	user_client=Pyro4.Proxy(user_uri)
+	while(a):
+		if user_client.check_alive()==0:
+			a=0
+			print("client socket closed")
+			socket_to_pass.close()
+			print("exit")
+			os._exit(1)
+		
+
 def main(server='localhost', port=25500):
-	#while para encontrar um nome de usuário válido
-	global socket_to_pass
+	#while to find a valid username
+	global socket_to_pass, user_uri
 	while True:
 		username = input('Username: ')
 
 		if ':' not in username:
 			break
 		else:
-			print("Nome de usuario não pode ter ':'. tente novamente")
+			print("Username cannot have ':' try again")
 
 
 	uris = get_uris(server, port)
 
-	#while para selecionar uma sala de bate-papo válidada
+	#while to select a valid chat room
 	while True:
-		print('Chats disponíveis:')
+		print('Available Music rooms:')
 		for n, item in enumerate(uris):
 			print(f"{n}: {item[0]}")
 
-		selection = input("Pick a chat: ")
+		selection = input("Pick a music room: ")
 
 		try:
 			uri = uris[int(selection)][1]
 			socket_to_pass.send((uris[int(selection)][0]+", "+username).encode())
 			break
 		except (IndexError, ValueError):
-			print(f"'{selection}' is not a valid chat, please, try again.")
+			print(f"'{selection}' is not a valid music room, please, try again.")
 
 	# server listens infinitely
 	t=threading.Thread(target = listen_music)
 	t.start()
 
-	#A representação do usuário conectada ao bate-papo é instanciada
+	#The impersonation of the user connected to the chat is instantiated
 	u = user.User(uri, username, delay)
+	user_uri=u.my_uri
+	t=threading.Thread(target = close_socket)
+	t.start()
 
 
 if __name__ == '__main__':

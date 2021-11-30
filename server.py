@@ -99,7 +99,7 @@ class Server():
 			if len(self.rooms_and_client[client_room][1])==1:
 				self.th=threading.Thread(target = self.watch_rooms, args=(client_room, ))
 				self.th.start()
-
+				self.rooms_and_client[client_room][0].elect_admin()
 
 			# con.close()
 
@@ -107,9 +107,14 @@ class Server():
 		while True:
 			if len(self.rooms_and_client)!=0:
 				# print(self.rooms_and_client[room][0].get_play_state())
+
 				if self.rooms_and_client[room][0].get_play_state()=='play':
 					for c in self.rooms_and_client[room][1]:
-						self.t=threading.Thread(target = self.send_music(c[1], 'audio_files/music2.wav'))
+						if c[0] not in self.rooms_and_client[room][0].get_usernames():
+							self.rooms_and_client[room][1].remove(c)
+
+					for c in self.rooms_and_client[room][1]:
+						self.t=threading.Thread(target = self.send_music(c[1], 'audio_files/music4.wav'))
 						self.t.start()
 						self.rooms_and_client[room][0].set_play_state()
 
