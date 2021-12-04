@@ -12,6 +12,7 @@ class Chat():
 		self.users = {}
 		self.usernames = []
 		self.user_msg=''
+		self.music_msg=''
 		self.admin=0
 		self.admin_name=''
 		# self.play_music('music2.wav')
@@ -119,6 +120,10 @@ class Chat():
 		if len(self.usernames)!=0 and message==f'{self.usernames[self.admin]}: play':
 			# self.play_music('music2.wav')
 			self.user_msg='play'
+		
+		temp=message.rsplit('- ',1)
+		if len(self.usernames)!=0 and message==f'{self.usernames[self.admin]}: play music- {temp[-1]}':
+			self.music_msg=message.rsplit(' ',1)[-1]
 
 		self.messages.append(message)
 		for user_uri, user in self.users.items():
@@ -130,6 +135,12 @@ class Chat():
 
 	def set_play_state(self):
 		self.user_msg=''
+
+	def get_music_file_state(self):
+		return self.music_msg
+
+	def set_music_file_state(self):
+		self.music_msg=''
 
 	def get_usernames(self):
 		return self.usernames

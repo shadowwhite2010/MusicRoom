@@ -6,6 +6,9 @@ import threading
 import socket as sk
 import datetime
 import threading, wave, pyaudio,pickle,struct
+import requests
+import shutil
+import os
 
 
 class Lobby():
@@ -45,6 +48,10 @@ class Server():
 		- port : int (default=25500) - port which the server should run.
 		- lobby_port : int (default=25501) - port which the daemon should run."""
 		self.rooms_and_client={}
+		self.queue=[]
+		self.room1_music=''
+		self.room2_music=''
+		self.room3_music=''
 
 		print("Setting up daemon")
 		self.lobby = Lobby(hostname=hostname, port=lobby_port)
@@ -58,6 +65,11 @@ class Server():
 		self.s_thread = threading.Thread(target=self._run)
 		self.s_thread.daemon=True
 		self.s_thread.start()
+		self.t=threading.Thread(target = self.fetch_music)
+		self.t.start()
+		# self.p=threading.Thread(target = self.print_queue)
+		# self.p.start()
+		
 
 	def _run(self):
 		print("Running server")
@@ -99,7 +111,10 @@ class Server():
 			if len(self.rooms_and_client[client_room][1])==1:
 				self.th=threading.Thread(target = self.watch_rooms, args=(client_room, ))
 				self.th.start()
+				self.thh=threading.Thread(target = self.watch_music_request, args=(client_room, ))
+				self.thh.start()
 				self.rooms_and_client[client_room][0].elect_admin()
+
 
 			# con.close()
 
@@ -113,9 +128,19 @@ class Server():
 						if c[0] not in self.rooms_and_client[room][0].get_usernames():
 							self.rooms_and_client[room][1].remove(c)
 
+					file=''
+					if room=='Music Room 1' and self.room1_music!='':
+						file=f'audio_files/{self.room1_music}.wav'
+					elif room=='Music Room 2' and self.room2_music!='':
+						file=f'audio_files/{self.room2_music}.wav'
+					elif room=='Music Room 3' and self.room3_music!='':
+						file=f'audio_files/{self.room3_music}.wav'
+
+					# if file!='':
 					for c in self.rooms_and_client[room][1]:
-						self.t=threading.Thread(target = self.send_music(c[1], 'audio_files/music4.wav'))
-						self.t.start()
+						print("file",file)
+						t1=threading.Thread(target = self.send_music, args=(c[1], file))
+						t1.start()
 						self.rooms_and_client[room][0].set_play_state()
 
 
@@ -154,10 +179,59 @@ class Server():
 			break
 
 		
+	def watch_music_request(self,room):
+		while True:
+			if len(self.rooms_and_client)!=0:
+				# print(self.rooms_and_client[room][0].get_play_state())
 
+				if self.rooms_and_client[room][0].get_music_file_state()!='':
+					file=self.rooms_and_client[room][0].get_music_file_state()
+					for c in self.rooms_and_client[room][1]:
+						if c[0] not in self.rooms_and_client[room][0].get_usernames():
+							self.rooms_and_client[room][1].remove(c)
+
+					self.queue.append({room:file})
+					print("Queue",self.queue)
+					self.rooms_and_client[room][0].set_music_file_state()
+
+
+	def fetch_music(self):
+		while(True):
+			while(len(self.queue)!=0):
+				top=self.queue.pop(0)
+				print("queue",self.queue)
+				if list(top.keys())[0]=='Music Room 1':
+					self.room1_music=top['Music Room 1']
+					self.download_file(f'http://31f4-152-57-50-94.ngrok.io/api/{self.room1_music}.wav')
+					print('Music Room 1',self.room1_music)
+				elif list(top.keys())[0]=='Music Room 2':
+					self.room2_music=top['Music Room 2']
+					self.download_file(f'http://31f4-152-57-50-94.ngrok.io/api/{self.room2_music}.wav')
+					print('Music Room 2',self.room2_music)
+				elif list(top.keys())[0]=='Music Room 3':
+					self.room3_music=top['Music Room 3']
+					self.download_file(f'http://31f4-152-57-50-94.ngrok.io/api/{self.room3_music}.wav')
+					print('Music Room 3',self.room3_music)
+				
+
+	def download_file(self,url):
+		local_filename = os.path.join("C:/Users/ASUS/Desktop/TE projects/Music Room/audio_files", url.split('/')[-1])
+		with requests.get(url, stream=True) as r:
+			with open(local_filename, 'wb') as f:
+				shutil.copyfileobj(r.raw, f)
+
+	# def print_queue(self):
+	# 	prev_length=0
+	# 	while(True):
+	# 		curr_length=len(self.queue)
+	# 		if curr_length!=prev_length:
+	# 			print("Queue",self.queue)
+	# 			prev_length=curr_length
 
 	def create_chat(self, chat_name):
 		self.lobby.register(chat_name)
+
+
 
 if __name__=="__main__": 
 	server = Server()
