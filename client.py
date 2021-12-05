@@ -38,12 +38,24 @@ def chritian(socket):
 	return error
 
 
-def get_uris(server, port):
+def get_uris(balancer, bal_port):
 	'''Function that connects to the \"dns\" server of uri
 and find out what are the existing chats'''
 	global delay,socket_to_pass
+
+	# Create socket which will connect to load balancer
+	load_socket= sk.socket(sk.AF_INET, sk.SOCK_STREAM)
+	load_socket.connect((balancer, bal_port))
+
+	# Recieve the ip and port of server to connect
+	serv_info=load_socket.recv(2048).decode('utf-8')
+	print(serv_info)
+	serv_ip, serv_port=tuple(map(str, serv_info.split(', ')))
+	serv_port=int(serv_port)
+
+	# Create socket which will connect to the required server
 	socket = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
-	socket.connect((server, port))
+	socket.connect((serv_ip, serv_port))
 	socket_to_pass=socket
 
 	#Calculate delay
@@ -106,7 +118,7 @@ def close_socket():
 			os._exit(1)
 		
 
-def main(server='localhost', port=25500):
+def main(server='localhost', port=25498):
 	#while to find a valid username
 	global socket_to_pass, user_uri
 	while True:

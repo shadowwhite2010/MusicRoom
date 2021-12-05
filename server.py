@@ -48,6 +48,7 @@ class Server():
 		- port : int (default=25500) - port which the server should run.
 		- lobby_port : int (default=25501) - port which the daemon should run."""
 		self.rooms_and_client={}
+		self.clients=0
 		self.queue=[]
 		self.room1_music=''
 		self.room2_music=''
@@ -122,11 +123,13 @@ class Server():
 		while True:
 			if len(self.rooms_and_client)!=0:
 				# print(self.rooms_and_client[room][0].get_play_state())
-
+					
 				if self.rooms_and_client[room][0].get_play_state()=='play':
 					for c in self.rooms_and_client[room][1]:
 						if c[0] not in self.rooms_and_client[room][0].get_usernames():
 							self.rooms_and_client[room][1].remove(c)
+							self.clients=self.clients-1
+							print("Client count",self.clients)
 
 					file=''
 					if room=='Music Room 1' and self.room1_music!='':
@@ -189,6 +192,8 @@ class Server():
 					for c in self.rooms_and_client[room][1]:
 						if c[0] not in self.rooms_and_client[room][0].get_usernames():
 							self.rooms_and_client[room][1].remove(c)
+							self.clients=self.clients-1
+							print("Client count",self.clients)
 
 					self.queue.append({room:file})
 					print("Queue",self.queue)
@@ -196,21 +201,22 @@ class Server():
 
 
 	def fetch_music(self):
+		ngrok_url='http://f4ea-2405-204-9293-ebcb-6c7f-6d75-d56e-2773.ngrok.io/api/'
 		while(True):
 			while(len(self.queue)!=0):
 				top=self.queue.pop(0)
 				print("queue",self.queue)
 				if list(top.keys())[0]=='Music Room 1':
 					self.room1_music=top['Music Room 1']
-					self.download_file(f'http://31f4-152-57-50-94.ngrok.io/api/{self.room1_music}.wav')
+					self.download_file(f'{ngrok_url}{self.room1_music}.wav')
 					print('Music Room 1',self.room1_music)
 				elif list(top.keys())[0]=='Music Room 2':
 					self.room2_music=top['Music Room 2']
-					self.download_file(f'http://31f4-152-57-50-94.ngrok.io/api/{self.room2_music}.wav')
+					self.download_file(f'{ngrok_url}{self.room2_music}.wav')
 					print('Music Room 2',self.room2_music)
 				elif list(top.keys())[0]=='Music Room 3':
 					self.room3_music=top['Music Room 3']
-					self.download_file(f'http://31f4-152-57-50-94.ngrok.io/api/{self.room3_music}.wav')
+					self.download_file(f'{ngrok_url}{self.room3_music}.wav')
 					print('Music Room 3',self.room3_music)
 				
 
@@ -233,18 +239,18 @@ class Server():
 
 
 
-if __name__=="__main__": 
-	server = Server()
-	server.create_chat('Music Room 1')
-	server.create_chat('Music Room 2')
-	server.create_chat('Music Room 3')
+# if __name__=="__main__": 
+# 	server = Server()
+# 	server.create_chat('Music Room 1')
+# 	server.create_chat('Music Room 2')
+# 	server.create_chat('Music Room 3')
 
-	# # create thread to watch music room by client
-	# server.th=threading.Thread(target = server.watch_rooms)
-	# server.th.start()
+# 	# # create thread to watch music room by client
+# 	# server.th=threading.Thread(target = server.watch_rooms)
+# 	# server.th.start()
 
-	server.run()
+# 	server.run()
 
-	#keeping server alive
-	while True:
-		time.sleep(30)
+# 	#keeping server alive
+# 	while True:
+# 		time.sleep(30)
