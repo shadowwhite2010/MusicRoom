@@ -93,7 +93,7 @@ class Chat():
 		self.usernames.remove(self.users[uri].username)
 		self.users[uri].kill()
 		del(self.users[uri])
-		if self.admin_name==temp:
+		if self.admin_name==temp and len(self.usernames)>=1:
 			self.elect_admin()
 		# daemon = Pyro4.Daemon()
 		# daemon.unregister(uri)
