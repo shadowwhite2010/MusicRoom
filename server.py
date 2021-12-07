@@ -196,21 +196,31 @@ class Server():
 
 
 	def fetch_music(self):
+		ngrok_url="http://3e1a-2409-4042-248b-eb3f-6db5-bd69-dddf-d78e.ngrok.io/api/"
 		while(True):
 			while(len(self.queue)!=0):
 				top=self.queue.pop(0)
 				print("queue",self.queue)
 				if list(top.keys())[0]=='Music Room 1':
 					self.room1_music=top['Music Room 1']
-					self.download_file(f'http://31f4-152-57-50-94.ngrok.io/api/{self.room1_music}.wav')
+					if self.room1_music+".wav" not in os.listdir("C:/Users/ASUS/Desktop/TE projects/Music Room/audio_files"):
+						self.download_file(f'{ngrok_url}{self.room1_music}.wav')
+					else:
+						print("Music present in the server system")
 					print('Music Room 1',self.room1_music)
 				elif list(top.keys())[0]=='Music Room 2':
 					self.room2_music=top['Music Room 2']
-					self.download_file(f'http://31f4-152-57-50-94.ngrok.io/api/{self.room2_music}.wav')
+					if self.room2_music+".wav" not in os.listdir("C:/Users/ASUS/Desktop/TE projects/Music Room/audio_files"):
+						self.download_file(f'{ngrok_url}{self.room2_music}.wav')
+					else:
+						print("Music present in the server system")
 					print('Music Room 2',self.room2_music)
 				elif list(top.keys())[0]=='Music Room 3':
 					self.room3_music=top['Music Room 3']
-					self.download_file(f'http://31f4-152-57-50-94.ngrok.io/api/{self.room3_music}.wav')
+					if self.room3_music+".wav" not in os.listdir("C:/Users/ASUS/Desktop/TE projects/Music Room/audio_files"):
+						self.download_file(f'{ngrok_url}{self.room3_music}.wav')
+					else:
+						print("Music present in the server system")
 					print('Music Room 3',self.room3_music)
 				
 
